@@ -7,8 +7,11 @@ SECRET_KEY = "django-not-used-for-jwt"
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["dice.simaptics.com", "localhost", "127.0.0.1"]
-#ALLOWED_HOSTS = ["*"]
+DOMAIN=os.getenv('DOMAIN',None)
+if DOMAIN:
+    ALLOWED_HOSTS = [f"dice.{DOMAIN}", "localhost", "127.0.0.1"]
+else:
+    ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",

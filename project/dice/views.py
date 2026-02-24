@@ -36,6 +36,7 @@ class RollDiceView(APIView):
             "total": total,
             "modifier": modifier,
             "final": final,
+            "sides": sides
         }
 
         return Response(result)

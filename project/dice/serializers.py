@@ -15,6 +15,7 @@ class RollResultSerializer(serializers.Serializer):
     total = serializers.IntegerField()
     modifier = serializers.IntegerField()
     final = serializers.IntegerField()
+    sides = serializers.IntegerField(min_value=2, max_value=100)
 
 # Dice macro serializer
 class DiceMacroSerializer(serializers.ModelSerializer):

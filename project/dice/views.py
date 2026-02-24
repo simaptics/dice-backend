@@ -1,3 +1,5 @@
+"""Views for public dice rolling and authenticated macro CRUD + roll."""
+
 import random
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -10,14 +12,20 @@ from django.utils.decorators import method_decorator
 from .serializers import RollRequestSerializer, RollResultSerializer, DiceMacroSerializer
 from .models import DiceMacro
 
+
 # ----------------------
-# Public dice roll endpoint
+# Public dice roll endpoint — POST /api/roll/
 # ----------------------
 @method_decorator(csrf_exempt, name="dispatch")
 class RollDiceView(APIView):
-    # No authentication needed
+    """Roll dice without authentication.
+
+    Accepts num_dice, sides, and an optional modifier. Returns the
+    individual rolls, their sum, and the modifier-adjusted final total.
+    """
+
     permission_classes = [AllowAny]
-    authentication_classes = []
+    authentication_classes = []  # skip JWT check entirely
 
     def post(self, request):
         serializer = RollRequestSerializer(data=request.data)
@@ -31,33 +39,40 @@ class RollDiceView(APIView):
         total = sum(rolls)
         final = total + modifier
 
-        result = {
+        return Response({
             "rolls": rolls,
             "total": total,
             "modifier": modifier,
             "final": final,
-            "sides": sides
-        }
-
-        return Response(result)
+            "sides": sides,
+        })
 
 
 # ----------------------
-# Dice macros (JWT protected)
+# Dice macros (JWT protected) — /api/macros/
 # ----------------------
 class DiceMacroViewSet(viewsets.ModelViewSet):
+    """CRUD for saved dice macros, scoped to the authenticated user.
+
+    Also exposes a custom `roll` action at POST /api/macros/{id}/roll/
+    that executes the saved macro and returns the result.
+    """
+
     serializer_class = DiceMacroSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        """Only return macros belonging to the current user."""
         return DiceMacro.objects.filter(user_id=self.request.user.id)
 
     def perform_create(self, serializer):
+        """Stamp the new macro with the authenticated user's ID."""
         serializer.save(user_id=self.request.user.id)
-        
+
     @action(detail=True, methods=["post"], url_path="roll")
     def roll_macro(self, request, pk=None):
-        macro = self.get_object()  # ensures macro belongs to user
+        """Roll dice using the parameters saved in a macro."""
+        macro = self.get_object()  # also enforces ownership via get_queryset
         rolls = [random.randint(1, macro.sides) for _ in range(macro.num_dice)]
         total = sum(rolls)
         final = total + macro.modifier

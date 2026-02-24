@@ -3,6 +3,8 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Django's own secret key — only used for sessions/CSRF, NOT for JWT.
+# JWT verification uses the SECRET_KEY env var (see dice/authentication.py).
 SECRET_KEY = "django-not-used-for-jwt"
 
 DEBUG = True
@@ -69,7 +71,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "dice_backend.wsgi.application"
 
-# ✅ EXISTING POSTGRES DATABASE
+# PostgreSQL database — all connection params come from environment variables.
+# For tests, this is overridden to SQLite in test_settings.py.
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -85,6 +88,8 @@ DATABASES = {
 # We are NOT using Django users for auth
 AUTH_PASSWORD_VALIDATORS = []
 
+# Default to JWT cookie auth and require authentication globally.
+# Individual views can override with permission_classes = [AllowAny].
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "dice.authentication.DiceJWTAuthentication",

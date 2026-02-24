@@ -1,1 +1,2 @@
-dice_backend/.venv/*
+.venv/*
+*.pyc
